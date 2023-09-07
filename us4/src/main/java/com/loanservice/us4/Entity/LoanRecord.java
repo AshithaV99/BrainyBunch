@@ -25,7 +25,6 @@ public class LoanRecord {
     private UserAccount user;
 
     @ManyToOne
-    @JsonBackReference // Add this annotation to prevent infinite recursion
     @JoinColumn(name = "book_id",nullable = false)
     private Book book;
 
