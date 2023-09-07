@@ -29,7 +29,6 @@ public class UserAccount {
     private BigDecimal totalLateFees;
 
     @OneToMany(mappedBy = "user")
-    @JsonManagedReference // Add this annotation to prevent infinite recursion
     private List<LoanRecord> loans = new ArrayList<>();
 
 }
