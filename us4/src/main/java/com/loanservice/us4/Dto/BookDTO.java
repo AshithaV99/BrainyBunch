@@ -1,5 +1,7 @@
 package com.loanservice.us4.Dto;
 
+import com.loanservice.us4.Entity.BookStatus;
+import com.loanservice.us4.Entity.UserAccount;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -8,8 +10,8 @@ import lombok.Setter;
 @Setter
 @Builder
 public class BookDTO {
-    private Long user_id;
     private String title;
     private String ISBN;
-    private String status;
+    private BookStatus status;
+
 }

@@ -1,10 +1,7 @@
 package com.loanservice.us4.Entity;
 
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import javax.persistence.*;
 
@@ -13,15 +10,17 @@ import javax.persistence.*;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class Book {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private Long Id;
-    @JoinColumn(name ="user_id",nullable = false)
-    private Long user_id;
+    @Column(name = "book_id",nullable = false)
+    private Long id;
+
     @Column(nullable = false)
     private String title;
-    @Column(nullable = false)
+
+    @Column(nullable = false,unique = true)
     private String ISBN;
 
     @Enumerated(value = EnumType.STRING)

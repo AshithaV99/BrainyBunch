@@ -1,5 +1,6 @@
 package com.loanservice.us4.Entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import lombok.*;
 import org.springframework.cglib.core.Local;
 
@@ -15,7 +16,8 @@ import java.time.LocalDate;
 @Builder
 public class LoanRecord {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    @Column(name = "loan_id",nullable = false)
     private Long id;
 
     @ManyToOne
@@ -23,12 +25,17 @@ public class LoanRecord {
     private UserAccount user;
 
     @ManyToOne
-    @JoinColumn(name = "book_id")
+    @JsonBackReference // Add this annotation to prevent infinite recursion
+    @JoinColumn(name = "book_id",nullable = false)
     private Book book;
 
-
+    @Column(name = "issue_date")
     private LocalDate issueDate;
+
+    @Column(name = "due_date")
     private LocalDate dueDate;
+
+    @Column(name = "late_fee")
     private BigDecimal lateFee;
 
 }

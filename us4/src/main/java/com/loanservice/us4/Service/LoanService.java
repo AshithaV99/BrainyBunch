@@ -6,8 +6,6 @@ import com.loanservice.us4.Entity.BookStatus;
 import com.loanservice.us4.Entity.LoanRecord;
 import com.loanservice.us4.Entity.UserAccount;
 import com.loanservice.us4.Exception.BookNotAvailableException;
-import com.loanservice.us4.Exception.LoanLimitExceededException;
-import com.loanservice.us4.Exception.LoanNotFoundException;
 import com.loanservice.us4.Exception.UserNotFoundException;
 import com.loanservice.us4.Repository.BookRepository;
 import com.loanservice.us4.Repository.LoanRepository;
@@ -18,68 +16,68 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
-import java.util.List;
 
 @Service
 public class LoanService {
 
-    private static final BigDecimal LATE_FEE_PER_DAY = BigDecimal.valueOf(5);
-    private final BookRepository bookRepository;
-    private final UserRepository userRepository;
-    private final LoanRepository loanRepository;
+   // private static final long YOUR_DAILY_LATE_FEE_RATE = 5;
+    @Autowired
+    private LoanRepository loanRepository;
 
     @Autowired
-    public LoanService(BookRepository bookRepository, UserRepository userRepository, LoanRepository loanRepository) {
-        this.bookRepository = bookRepository;
-        this.userRepository = userRepository;
-        this.loanRepository = loanRepository;
-    }
+    private UserRepository userRepository;
+
+    @Autowired
+    private BookRepository bookRepository;
+
+
+
+
 
     public LoanRecord issueBook(LoanDTO loan) {
-            Long userId = loan.getUserId();
-            Long bookId = loan.getBookId();
+        Long userId = loan.getUserId();
+        Long bookId = loan.getBookId();
 
-            //Check the book by its id
-            Book book = bookRepository.findById(bookId)
-                    .orElseThrow(() -> new BookNotAvailableException("Book not found"));
+        // Check if the book exists by its ID
+        Book book = bookRepository.findById(bookId)
+                .orElseThrow(() -> new BookNotAvailableException("Book not found"));
 
-            //Check if the book is available for a loan
-            if (book.getStatus() != BookStatus.AVAILABLE) {
-                throw new BookNotAvailableException("Book is not available for loan");
-            }
+        // Check if the book is available for a loan
+        //if (book.getStatus() != BookStatus.AVAILABLE) {
+          //  throw new BookNotAvailableException("Book is not available for loan");
+        //}
 
-            // Check if the user exists
-            UserAccount user = userRepository.findById(userId)
-                    .orElseThrow(() -> new UserNotFoundException("User not found"));
+        // Check if the user exists
+        UserAccount user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
 
-            // Check the user's loan limit
-            int maxLoanLimit = 5;
-            List<LoanRecord> userLoans = loanRepository.findByUserId(userId);
-            if (userLoans.size() >= maxLoanLimit) {
-                throw new LoanLimitExceededException("User has exceeded the max loan limit of " + maxLoanLimit);
-            }
-            //It sets the user, book, issue date (the current date), and due date (current date + 14 days).
-            LoanRecord loanRecord = new LoanRecord();
-            loanRecord.setUser(user);
-            loanRecord.setBook(book);
-            loanRecord.setIssueDate(LocalDate.now());
-            loanRecord.setDueDate(LocalDate.now().plusDays(14));
+        // Create a new loan record
+        LoanRecord loanRecord = new LoanRecord();
+        loanRecord.setId(user.getId());
+        loanRecord.setId(book.getId());
+        loanRecord.setIssueDate(LocalDate.now());
+        loanRecord.setDueDate(LocalDate.now().plusDays(14));
 
-            // Save the loan record and update the user's loans
-            loanRecord = loanRepository.save(loanRecord); // Save and obtain the generated ID
+        // Save the loan record and update the user's loans
+        loanRecord= loanRepository.save(loanRecord);
 
-            // Update book status to 'Loaned' and save changes
-            book.setStatus(BookStatus.LOANED);
-            bookRepository.save(book);
+        book.setStatus(BookStatus.LOANED);
+        bookRepository.save(book);
 
-            // Add the loan record to the user's loans and save changes
-            userLoans.add(loanRecord);
-            userRepository.save(user);
+        // Add the loan record to the user's loans and save changes
+        user.getLoans().add(loanRecord);
+        userRepository.save(user);
+        return loanRecord;
+    }
+}
 
-            return loanRecord;
-        }
 
-    public BigDecimal returnBook(Long loanId) {
+
+
+
+
+
+    /*public BigDecimal returnBook(Long loanId) {
         LoanRecord loanRecord = loanRepository.findById(loanId)
                 .orElseThrow(() -> new LoanNotFoundException("Loan not found"));
 
@@ -138,4 +136,4 @@ public class LoanService {
             userRepository.save(user);
         }
     }
-}
+}*/

@@ -11,21 +11,19 @@ import java.math.BigDecimal;
 import java.util.List;
 
 @RestController
-@RequestMapping("loans")
+@RequestMapping("/loans")
 public class LoanController {
-    private final LoanService loanService;
-
     @Autowired
-    public LoanController(LoanService loanService) {
-        this.loanService = loanService;
-    }
+    private LoanService loanService;
 
-    @PostMapping("/issue")
+
+   @PostMapping("/issue")
     public ResponseEntity<LoanRecord> issueBook(@RequestBody LoanDTO loan) {
-            LoanRecord issuedLoan = loanService.issueBook(loan);
-            return ResponseEntity.ok(issuedLoan);
+        LoanRecord issuedLoan = loanService.issueBook(loan);
+        return ResponseEntity.ok(issuedLoan);
     }
-    @PostMapping("/return")
+}
+   /* @PostMapping("/return")
     public ResponseEntity<BigDecimal> returnBook(@PathVariable Long loanId){
         return ResponseEntity.ok(loanService.returnBook(loanId));
     }
@@ -44,4 +42,4 @@ public class LoanController {
     // clear late fees based on id
     }
 
-}
+}*/

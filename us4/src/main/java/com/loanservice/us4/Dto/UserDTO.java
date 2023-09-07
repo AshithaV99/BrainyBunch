@@ -10,7 +10,6 @@ import java.math.BigDecimal;
 @Setter
 @Builder
 public class UserDTO {
-    private Long Id;
     private String username;
     private String email;
     private BigDecimal totalLateFees;
