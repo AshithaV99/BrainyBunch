@@ -18,7 +18,7 @@ public class BookService {
         Book savedBook = new Book();
         savedBook.setTitle(bookDTO.getTitle());
         savedBook.setISBN(bookDTO.getISBN());
-        savedBook.setStatus(BookStatus.valueOf(String.valueOf(bookDTO.getStatus())));
+        savedBook.setStatus(BookStatus.AVAILABLE);
         return bookRepository.save(savedBook);
     }
 }

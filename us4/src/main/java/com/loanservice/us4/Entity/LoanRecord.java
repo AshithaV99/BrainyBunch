@@ -20,16 +20,12 @@ public class LoanRecord {
     @Column(name = "loan_id",nullable = false)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
-    private UserAccount user;
-
-    @ManyToOne
-    @JoinColumn(name = "book_id",nullable = false)
-    private Book book;
+    private Long userId;
+    private Long bookId;
 
     @Column(name = "issue_date")
     private LocalDate issueDate;
+
 
     @Column(name = "due_date")
     private LocalDate dueDate;

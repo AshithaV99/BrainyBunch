@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
+import javax.persistence.Column;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
@@ -13,11 +14,12 @@ import java.time.LocalDate;
 @Builder
 public class LoanDTO {
 
+    @Column(nullable=false)
     private Long userId;
+    @Column(nullable = false)
     private Long bookId;
     private LocalDate issueDate;
-    private LocalDate dueDate;
-    private BigDecimal lateFee;
+
 
 
 }

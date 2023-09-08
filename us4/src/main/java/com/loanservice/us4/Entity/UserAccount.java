@@ -8,6 +8,7 @@ import org.springframework.boot.autoconfigure.domain.EntityScan;
 import javax.persistence.*;
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 @Entity
@@ -24,11 +25,9 @@ public class UserAccount {
 
     private String username;
     private String email;
+    private BigDecimal totalLateFees=BigDecimal.ZERO;
 
-    @Column(name = "total_late_fees")
-    private BigDecimal totalLateFees;
 
-    @OneToMany(mappedBy = "user")
-    private List<LoanRecord> loans = new ArrayList<>();
+
 
 }

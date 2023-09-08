@@ -1,11 +1,9 @@
 package com.loanservice.us4.Service;
 
 import com.loanservice.us4.Dto.LoanDTO;
-import com.loanservice.us4.Entity.Book;
-import com.loanservice.us4.Entity.BookStatus;
-import com.loanservice.us4.Entity.LoanRecord;
-import com.loanservice.us4.Entity.UserAccount;
+import com.loanservice.us4.Entity.*;
 import com.loanservice.us4.Exception.BookNotAvailableException;
+import com.loanservice.us4.Exception.LoanNotFoundException;
 import com.loanservice.us4.Exception.UserNotFoundException;
 import com.loanservice.us4.Repository.BookRepository;
 import com.loanservice.us4.Repository.LoanRepository;
@@ -15,12 +13,17 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
+import java.util.List;
+
+import static java.time.temporal.ChronoUnit.DAYS;
 
 @Service
 public class LoanService {
 
-   // private static final long YOUR_DAILY_LATE_FEE_RATE = 5;
+
+    private static final long YOUR_DAILY_LATE_FEE_RATE = 5;
+    private static final BigDecimal LATE_FEE_PER_DAY = BigDecimal.valueOf(1);
+
     @Autowired
     private LoanRepository loanRepository;
 
@@ -29,10 +32,6 @@ public class LoanService {
 
     @Autowired
     private BookRepository bookRepository;
-
-
-
-
 
     public LoanRecord issueBook(LoanDTO loan) {
         Long userId = loan.getUserId();
@@ -43,9 +42,9 @@ public class LoanService {
                 .orElseThrow(() -> new BookNotAvailableException("Book not found"));
 
         // Check if the book is available for a loan
-        //if (book.getStatus() != BookStatus.AVAILABLE) {
-          //  throw new BookNotAvailableException("Book is not available for loan");
-        //}
+        if (book.getStatus() != BookStatus.AVAILABLE) {
+          throw new BookNotAvailableException("Book is not available for loan");
+        }
 
         // Check if the user exists
         UserAccount user = userRepository.findById(userId)
@@ -53,74 +52,66 @@ public class LoanService {
 
         // Create a new loan record
         LoanRecord loanRecord = new LoanRecord();
-        loanRecord.setId(user.getId());
-        loanRecord.setId(book.getId());
+        loanRecord.setUserId(userId);
+        loanRecord.setBookId(bookId);
         loanRecord.setIssueDate(LocalDate.now());
         loanRecord.setDueDate(LocalDate.now().plusDays(14));
 
         // Save the loan record and update the user's loans
-        loanRecord= loanRepository.save(loanRecord);
+        loanRecord = loanRepository.save(loanRecord);
 
         book.setStatus(BookStatus.LOANED);
         bookRepository.save(book);
 
         // Add the loan record to the user's loans and save changes
-        user.getLoans().add(loanRecord);
         userRepository.save(user);
         return loanRecord;
     }
-}
 
+    public LateFeeInfo returnBook(Long loanId) {
 
+            LoanRecord loanRecord = loanRepository.findById(loanId)
+                    .orElseThrow(() -> new LoanNotFoundException("Loan not found"));
 
+            LocalDate dueDate = loanRecord.getDueDate();
+            LocalDate today = LocalDate.now();
+            BigDecimal lateFee = BigDecimal.ZERO;
 
+            if (today.isAfter(dueDate)) {
+                long daysLate = DAYS.between(dueDate, today);
+                lateFee = BigDecimal.valueOf(daysLate).multiply(LATE_FEE_PER_DAY);
 
+                loanRecord.setLateFee(lateFee);
+                loanRepository.save(loanRecord);
+                UserAccount user = userRepository.findById(loanRecord.getUserId())
+                        .orElseThrow(() -> new UserNotFoundException("User not found"));
 
-
-    /*public BigDecimal returnBook(Long loanId) {
-        LoanRecord loanRecord = loanRepository.findById(loanId)
-                .orElseThrow(() -> new LoanNotFoundException("Loan not found"));
-
-        LocalDate dueDate = loanRecord.getDueDate();
-        LocalDate today = LocalDate.now();
-        // Get the due date and the current date
-        BigDecimal lateFee = BigDecimal.ZERO;
-
-        if (today.isAfter(dueDate)) {
-            long daysLate = ChronoUnit.DAYS.between(dueDate, today);
-            // Calculate the late fee based on the number of days late and a daily rate
-            lateFee = LATE_FEE_PER_DAY.multiply(BigDecimal.valueOf(daysLate));
-            // // Set the late fee on the LoanRecord
-            loanRecord.setLateFee(lateFee);
-            loanRepository.save(loanRecord);
-
-            UserAccount userAccount = loanRecord.getUser(); // Use the associated user
-            if (userAccount != null) {
-                // // Update the user's total late fees with the new late fee
-                userAccount.setTotalLateFees(userAccount.getTotalLateFees().add(lateFee));
-                userRepository.save(userAccount);
-            } else {
-                throw new UserNotFoundException("User not found");
+                user.setTotalLateFees(user.getTotalLateFees().add(lateFee));
+                userRepository.save(user);
             }
-        }
-        // Return the calculated late fee for this loan
-        return loanRecord.getLateFee();
-    }
 
-    public List<LoanRecord> getUserLoans(Long userId) {
+            // Assuming ReturnResponse has a constructor that accepts lateFee as a parameter
+            return new LateFeeInfo(lateFee);
+
+            }
+
+
+
+
+   /* public List<LoanRecord> getUserLoans(Long userId) {
         List<LoanRecord> userLoans = loanRepository.findByUserId(userId);
         return userLoans;
     //To get the list of loan records
-    }
+    }*/
 
-    public void clearLateFees(Long userId) {
+   /* public void clearLateFees(Long userId) {
         // Retrieve all loans for the specified user
         List<LoanRecord> userLoans = loanRepository.findByUserId(userId);
 
         BigDecimal totalLateFees = BigDecimal.ZERO;
 
         // Calculate the total late fees for the user
-        for (LoanRecord loan : userLoans) {
+        for (LoanRecord loan : LateFeeInfo) {
             BigDecimal lateFee = loan.getLateFee();
             if (lateFee != null) {
                 totalLateFees = totalLateFees.add(lateFee);
@@ -135,5 +126,22 @@ public class LoanService {
             user.setTotalLateFees(BigDecimal.ZERO); // Assume have a field for total late fees in UserAccount
             userRepository.save(user);
         }
+    }*/
+
+    public void clearFee(Long loanId) {
+        LoanRecord loanRecord = loanRepository.findById(loanId)
+                .orElseThrow(() -> new LoanNotFoundException("Loan not found"));
+
+        if (loanRecord.getLateFee().compareTo(BigDecimal.ZERO) > 0) {
+            loanRecord.setLateFee(BigDecimal.ZERO);
+            loanRepository.save(loanRecord);
+
+            UserAccount user = userRepository.findById(loanRecord.getUserId())
+                    .orElseThrow(() -> new UserNotFoundException("User not found"));
+
+            // Subtract the late fee from the user's total late fees
+            user.setTotalLateFees(user.getTotalLateFees().subtract(loanRecord.getLateFee()));
+            userRepository.save(user);
+        }
     }
-}*/
+}

@@ -15,7 +15,6 @@ public class UserService {
         UserAccount user= new UserAccount();
         user.setUsername(userDTO.getUsername());
         user.setEmail(userDTO.getEmail());
-        user.setTotalLateFees(userDTO.getTotalLateFees());
         userRepository.save(user);
 
     }
