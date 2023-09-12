@@ -19,6 +19,7 @@ public class LoanDTO {
     @Column(nullable = false)
     private Long bookId;
     private LocalDate issueDate;
+    private LocalDate dueDate;
 
 
 

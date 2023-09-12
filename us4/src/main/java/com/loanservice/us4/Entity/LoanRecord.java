@@ -33,6 +33,9 @@ public class LoanRecord {
     @Column(name = "late_fee")
     private BigDecimal lateFee;
 
+    @Column(name = "return_date")
+    private LocalDate returnDate;
+
 }
 
 

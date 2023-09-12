@@ -25,9 +25,6 @@ public class UserAccount {
 
     private String username;
     private String email;
-    private BigDecimal totalLateFees=BigDecimal.ZERO;
-
-
-
+    private BigDecimal totalLateFees=BigDecimal.ZERO;;
 
 }

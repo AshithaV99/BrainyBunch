@@ -6,6 +6,8 @@ import com.loanservice.us4.Repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Service
 public class UserService {
     @Autowired
@@ -17,5 +19,9 @@ public class UserService {
         user.setEmail(userDTO.getEmail());
         userRepository.save(user);
 
+    }
+
+    public Optional<UserAccount> findUserById(Long id) {
+        return userRepository.findById(id);
     }
 }
