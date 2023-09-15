@@ -28,8 +28,6 @@ import static java.time.temporal.ChronoUnit.DAYS;
 public class LoanService {
 
 
-    private static final BigDecimal LATE_FEE_PER_DAY = BigDecimal.valueOf(10);
-
     @Autowired
     private LoanRepository loanRepository;
 
@@ -42,21 +40,17 @@ public class LoanService {
     public LoanRecord issueBook(LoanDTO loan) {
         Long userId = loan.getUserId();
         Long bookId = loan.getBookId();
-
-        // Check if the book exists by its ID
+        
         Book book = bookRepository.findById(bookId)
                 .orElseThrow(() -> new BookNotAvailableException("Book not found"));
 
-        // Check if the book is available for a loan
         if (book.getStatus() != BookStatus.AVAILABLE) {
             throw new BookNotAvailableException("Book is not available for loan");
         }
 
-        // Check if the user exists
         UserAccount user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
 
-        // Create a new loan record
         LoanRecord loanRecord = new LoanRecord();
         loanRecord.setUserId(userId);
         loanRecord.setBookId(bookId);
@@ -64,7 +58,6 @@ public class LoanService {
         loanRecord.setDueDate(LocalDate.now().plusDays(14));
 
 
-        // Save the loan record and update the user's loans
         loanRecord = loanRepository.save(loanRecord);
 
         book.setStatus(LOANED);
@@ -105,11 +98,11 @@ public class LoanService {
 
         LocalDate dueDate = loanRecord.getDueDate();
         LocalDate today = LocalDate.now();
-        BigDecimal lateFee;
+        BigDecimal lateFee=BigDecimal.ZERO;
 
         if (today.isAfter(dueDate)) {
             long daysLate = DAYS.between(dueDate, today);
-            lateFee = new BigDecimal(daysLate).multiply(LATE_FEE_PER_DAY);
+            lateFee = new BigDecimal(daysLate).multiply(BigDecimal.valueOf(2));
 
             loanRecord.setLateFee(lateFee);
             loanRepository.save(loanRecord);
@@ -125,18 +118,15 @@ public class LoanService {
                     .orElseThrow(() -> new UserNotFoundException("User not found"));
             lateFee = user.getTotalLateFees();
             loanRecord.setLateFee(lateFee);
-
             return new ResponseEntity<>(loanRecord, HttpStatus.CREATED);
         }
-
-
 
     }
 
 
 
 
-    public void clearLateFee(Long loanId) {
+    public LoanRecord clearLateFee(Long loanId) {
         LoanRecord loanRecord = loanRepository.findById(loanId)
                 .orElseThrow(() -> new LoanNotFoundException("Loan not found"));
 
@@ -154,6 +144,7 @@ public class LoanService {
         } else {
             throw new NoLateFeesException("No late fees to clear for this loan.");
         }
+        return loanRecord;
     }
 
 
