@@ -3,10 +3,7 @@ package com.loanservice.us4.Service;
 import com.loanservice.us4.Dto.LoanDTO;
 import com.loanservice.us4.Dto.LoanReturnDTO;
 import com.loanservice.us4.Entity.*;
-import com.loanservice.us4.Exception.BookNotAvailableException;
-import com.loanservice.us4.Exception.LoanNotFoundException;
-import com.loanservice.us4.Exception.NoLateFeesException;
-import com.loanservice.us4.Exception.UserNotFoundException;
+import com.loanservice.us4.Exception.*;
 import com.loanservice.us4.Repository.BookRepository;
 import com.loanservice.us4.Repository.LoanRepository;
 import com.loanservice.us4.Repository.UserRepository;
@@ -44,12 +41,21 @@ public class LoanService {
         Book book = bookRepository.findById(bookId)
                 .orElseThrow(() -> new BookNotAvailableException("Book not found"));
 
+
+
         if (book.getStatus() != BookStatus.AVAILABLE) {
             throw new BookNotAvailableException("Book is not available for loan");
         }
 
         UserAccount user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
+
+        List<LoanRecord> loanRecords = loanRepository.findByUserId(user.getId());
+        int limit = 4;
+        if (loanRecords.size() >= 4) {
+            throw new ExceededLoanLimitException("The user has exceeded the maximum loan limit");
+        }
+
 
         LoanRecord loanRecord = new LoanRecord();
         loanRecord.setUserId(userId);
@@ -62,8 +68,6 @@ public class LoanService {
 
         book.setStatus(LOANED);
         bookRepository.save(book);
-
-        // Add the loan record to the user's loans and save changes
         userRepository.save(user);
         return loanRecord;
     }

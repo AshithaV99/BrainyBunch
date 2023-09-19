@@ -12,5 +12,6 @@ import java.math.BigDecimal;
 public class UserDTO {
     private String username;
     private String email;
+    private String password;
     private BigDecimal totalLateFees;
 }
