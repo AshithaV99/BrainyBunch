@@ -25,6 +25,7 @@ import static java.time.temporal.ChronoUnit.DAYS;
 public class LoanService {
 
 
+    private static final BigDecimal LATE_FEE_PER_DAY = BigDecimal.valueOf(5);
     @Autowired
     private LoanRepository loanRepository;
 
@@ -37,10 +38,9 @@ public class LoanService {
     public LoanRecord issueBook(LoanDTO loan) {
         Long userId = loan.getUserId();
         Long bookId = loan.getBookId();
-        
+
         Book book = bookRepository.findById(bookId)
                 .orElseThrow(() -> new BookNotAvailableException("Book not found"));
-
 
 
         if (book.getStatus() != BookStatus.AVAILABLE) {
@@ -102,11 +102,11 @@ public class LoanService {
 
         LocalDate dueDate = loanRecord.getDueDate();
         LocalDate today = LocalDate.now();
-        BigDecimal lateFee=BigDecimal.ZERO;
+        BigDecimal lateFee = BigDecimal.ZERO;
 
         if (today.isAfter(dueDate)) {
             long daysLate = DAYS.between(dueDate, today);
-            lateFee = new BigDecimal(daysLate).multiply(BigDecimal.valueOf(2));
+            lateFee = new BigDecimal(daysLate).multiply(LATE_FEE_PER_DAY);
 
             loanRecord.setLateFee(lateFee);
             loanRepository.save(loanRecord);
@@ -115,17 +115,11 @@ public class LoanService {
 
             user.setTotalLateFees(user.getTotalLateFees().add(lateFee));
             userRepository.save(user);
-            return new ResponseEntity<>(loanRecord,HttpStatus.CREATED);
-        }else {
-            // If not late, set lateFee to the user's totalLateFees
-            UserAccount user = userRepository.findById(loanRecord.getUserId())
-                    .orElseThrow(() -> new UserNotFoundException("User not found"));
-            lateFee = user.getTotalLateFees();
-            loanRecord.setLateFee(lateFee);
+        }
             return new ResponseEntity<>(loanRecord, HttpStatus.CREATED);
         }
 
-    }
+
 
 
 
@@ -164,7 +158,8 @@ public class LoanService {
         UserAccount user = userRepository.findById(loanRecord.getUserId())
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
 
-        user.setTotalLateFees(lateFee); // Update the totalLateFees with the new lateFee
+        // Update the totalLateFees with the new lateFee
+        user.setTotalLateFees(lateFee);
         userRepository.save(user);
 
         return loanRecord;
